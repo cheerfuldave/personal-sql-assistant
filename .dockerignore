@@ -7,6 +7,8 @@
 *.py[cod]
 *$py.class
 
+images/
+
 # C extensions
 *.so
 
