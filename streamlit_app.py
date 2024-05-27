@@ -1,7 +1,7 @@
 import streamlit as st
 from helpers.llm import getAssistantResponse
 
-st.set_page_config(page_title="MedAI Assistant Bot", page_icon="🩺")
+st.set_page_config(page_title="MedAI Assistant Beta", page_icon="🩺")
 
 st.title("Dr Abhishek Shukla")
 st.write(
