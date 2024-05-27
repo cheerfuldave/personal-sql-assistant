@@ -1,6 +1,8 @@
 import streamlit as st
 from helpers.llm import getAssistantResponse
 
+st.set_page_config(page_title="MedAI Assistant Bot", page_icon="🩺")
+
 st.title("Dr Abhishek Shukla")
 st.write(
     "Dr Abhishek Shukla is a General Practitioner with over 20 years of experience. He is a member of the Indian Medical Association and has been awarded the 'Best Doctor' award for 5 consecutive years."
