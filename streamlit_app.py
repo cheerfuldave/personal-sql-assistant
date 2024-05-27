@@ -4,10 +4,11 @@ from helpers.llm import getAssistantResponse
 
 st.set_page_config(page_title="MedAI Assistant Beta", page_icon="🩺")
 
-st.title("Dr Abhishek Shukla")
+st.title("Dr Sourabh Suman ")
 st.write(
-    "Dr Abhishek Shukla is a General Practitioner with over 20 years of experience. He is a member of the Indian Medical Association and has been awarded the 'Best Doctor' award for 5 consecutive years."
+    "Dr Sourabh Suman  is a General Practitioner with over 20 years of experience. He is a member of the Indian Medical Association and has been awarded the 'Best Doctor' award for 5 consecutive years."
 )
+
 
 def autoplay_audio(file_path: str):
     with open(file_path, "rb") as f:
@@ -22,6 +23,7 @@ def autoplay_audio(file_path: str):
             md,
             unsafe_allow_html=True,
         )
+
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
