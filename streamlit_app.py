@@ -1,124 +1,49 @@
-import base64
-import datetime
-import time
 import json
-
-import pandas as pd
 import streamlit as st
+from helpers.llm import getAssistantResponse
 
-from helpers.db import execute_sql, load_schema
-from helpers.llm import get_sql_from_ai
-
-st.title("Personal SQL Assistant")
+st.title("Dr Abhishek Shukla")
 st.write(
-    "This app helps you generate SQL queries using Natural Language. You can ask what you want to get from the database and the AI will generate and run the SQL query for you."
+    "Dr Abhishek Shukla is a General Practitioner with over 20 years of experience. He is a member of the Indian Medical Association and has been awarded the 'Best Doctor' award for 5 consecutive years."
 )
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
 for message in st.session_state.messages:
-    if message["role"] == "assistant":
-        with st.chat_message("assistant"):
-            messageContent = json.loads(message["content"])
-            st.markdown(messageContent["message"])
-            if messageContent["sql"] != "SELECT 0;":
-                st.markdown(f"```sql\n{messageContent['sql']}\n```")
-    elif message["role"] == "user":
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-
-# Load schema
-if "schema" not in st.session_state:
-    schema = load_schema()
-    st.session_state["schema"] = schema
-
-if "views" not in st.session_state:
-    st.session_state["views"] = [
-        {
-            "name": "Get 5 Random Posts",
-            "sql": "SELECT * FROM posts ORDER BY RANDOM() LIMIT 5;",
-        }
-    ]
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
 
-def run_query(in_message=False):
-    # Check if SQL query exists in session state
-    if "sql" in st.session_state:
-        sql = st.session_state["sql"]
-        if sql == "SELECT 0;":
-            return
-        try:
-            if in_message:
-                with st.chat_message("assistant"):
-                    df = execute_sql(sql)
-                    st.dataframe(df)
-            else:
-                df = execute_sql(sql)
-                st.dataframe(df)
-            st.session_state["df"] = df
-        except Exception as e:
-            st.error(f"Error executing SQL: {e}")
+@st.experimental_dialog("Generate Report")
+def generateReport():
+    st.write("Generating Your Report")
 
 
-st.sidebar.header("❄ Saved Views ❄")
-for view in st.session_state["views"]:
-    if st.sidebar.button(view["name"]):
-        st.session_state.messages = [
-            {
-                "role": "assistant",
-                "content": json.dumps(
-                    {
-                        "message": f'Showing saved view {view["name"]}',
-                        "sql": view["sql"],
-                    }
-                ),
-            }
-        ]
-        st.session_state["sql"] = view["sql"]
-        run_query(in_message=True)
+if "balloons" not in st.session_state:
+    st.session_state["balloons"] = True
 
+if st.session_state["balloons"]:
+    st.balloons()
+    st.session_state["balloons"] = False
 
-@st.experimental_dialog("Save Your View")
-def save_view(sql):
-    st.write("Would you like to save this view?")
-    viewName = st.text_input("View Name", value="My View")
-    if st.button("Save"):
-        # Green color
-        st.session_state["views"].append({"name": viewName, "sql": sql})
-        st.markdown(":green[View saved successfully!]")
-        st.rerun()
-
-
-if st.session_state.get("save-view"):
-    save_view(st.session_state["sql"])
-
-if "snow" not in st.session_state:
-    st.session_state["snow"] = True
-
-if st.session_state["snow"]:
-    st.snow()
-    st.session_state["snow"] = False
-
-if prompt := st.chat_input("What do you want to get from the database?"):
+if prompt := st.chat_input("Ask your question"):
     st.session_state.messages.append({"role": "user", "content": prompt})
 
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    aiMessage, sql, rawResponse = get_sql_from_ai(
-        st.session_state["schema"], st.session_state["messages"]
-    ).values()
-
     with st.chat_message("assistant"):
-        st.markdown(aiMessage)
-        if sql != "SELECT 0;":
-            st.markdown(f"```sql\n{sql}\n```")
+        assistantResponse = getAssistantResponse(st.session_state.messages)
+        response = st.write_stream(assistantResponse)
 
-    if sql != "SELECT 0;":
-        st.button("Save View", key="save-view")
-        with st.spinner("Running SQL..."):
-            st.session_state["sql"] = sql
-            run_query(in_message=True)
+    st.session_state.messages.append({"role": "assistant", "content": response})
 
-    st.session_state.messages.append({"role": "assistant", "content": rawResponse})
+    if "Generating Your Report" in response:
+        with st.chat_message("assistant"):
+            reportResponse = getAssistantResponse(
+                st.session_state.messages[:-1], makeReport=True
+            )
+            report = st.write_stream(reportResponse)
+
+        st.session_state.messages.append({"role": "assistant", "content": report})
